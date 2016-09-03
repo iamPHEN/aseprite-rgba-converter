@@ -34,5 +34,15 @@ set(INCLUDES
     loader.h
     )
 
+set(SKIP_INSTALL_ALL 1)
+set(ZLIB_ROOT ${PROJECT_SOURCE_DIR}/zlib)
+set(ZLIB_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/zlib" "${CMAKE_BINARY_DIR}/zlib")
+set(ZLIB_LIBRARIES "zlibstatic")
+add_subdirectory(${PROJECT_SOURCE_DIR}/zlib)
+
 add_library(AsepriteRgbaConvert STATIC ${SOURCES} ${INCLUDES})
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${ZLIB_INCLUDE_DIRS})
+target_link_libraries(AsepriteRgbaConvert ${ZLIB_LIBRARIES})
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/integration_test)
