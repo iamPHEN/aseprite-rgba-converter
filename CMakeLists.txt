@@ -29,6 +29,7 @@ endif()
 
 set(BUILD_SHARED_LIBS off)
 option(ZLIB_TESTS    "Compile with zlib examples/tests" Off)
+option(AsepriteRgbaConvert_TESTS    "Compile AsepriteRgbaConvert tests" Off)
 
 set(SOURCES
     loader.cpp
@@ -51,4 +52,6 @@ include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(AsepriteRgbaConvert ${ZLIB_LIBRARIES})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/integration_test)
+if(AsepriteRgbaConvert_TESTS)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/integration_test)
+endif()
