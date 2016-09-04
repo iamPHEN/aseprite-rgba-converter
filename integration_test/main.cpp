@@ -57,6 +57,23 @@ std::vector<BYTE> decompress(const std::vector<BYTE>& str) {
   return outstring;
 }
 
+// Dumps RGBA array to stdout as ascii
+void print_as_ascii(std::vector<PIXEL_RGBA> pixels, WORD w, WORD h) {
+  std::cout << std::endl;
+  for ( size_t x = 0; x < h; ++x ) {
+    for ( size_t y = 0; y < w; ++y ) {
+      if ( pixels.at(y + (x*w)).r != 0 || 
+          pixels.at(y + (x*w)).g != 0 || 
+          pixels.at(y + (x*w)).b != 0 ) {
+        std::cout << "o";
+      } else {
+        std::cout << ".";
+      }
+    }
+    std::cout << std::endl;
+  }
+}
+
 
 void print_struct(void *s, size_t structSize) {
   size_t i;
@@ -121,50 +138,60 @@ int main(int argc, char* const argv[]) {
      }
      frames.emplace_back(frame{ header, chunks });
    }
-
+  
+  // Parse chunk data.
+  Sprite s;
   for ( auto& frame : frames ) {
+    std::vector<frame_cel> cels;
     for ( auto& chunk : frame.chunks ) {
-      // Assume format is RGBA
-      std::vector<PIXEL_RGBA> pixels;
-      WORD w, h;
       auto char_iter = reinterpret_cast<const char*> (chunk.data.data());
-      cel_header c;
+      auto begin_ptr = char_iter;
+      frame_cel frame_cel;
       switch ( chunk.type ) {
        case cel:
-         char_iter = read_object(char_iter, c);
+         char_iter = read_object(char_iter, frame_cel.c);
          assert(a.depth == 32);
-         if ( c.cell_type == 0 ) {
-           char_iter = read_object(char_iter, w);
-           char_iter = read_object(char_iter, h);
-           pixels.resize(w * h);
-           char_iter = read_object(char_iter, pixels);
+         if ( frame_cel.c.cell_type == 0 ) {
+           char_iter = read_object(char_iter, frame_cel.w);
+           char_iter = read_object(char_iter, frame_cel.h);
+           frame_cel.pixels.resize(frame_cel.w * frame_cel.h);
+           char_iter = read_object(char_iter, frame_cel.pixels);
            // Check that we've read all the data.
-           assert(char_iter == reinterpret_cast<const char*> (chunk.data.data()) + chunk.size);
-         } else if(c.cell_type == 1 ) {
-
-         } else if ( c.cell_type == 2 ) {
-           char_iter = read_object(char_iter, w);
-           char_iter = read_object(char_iter, h);
-           pixels.resize(w * h);
+           assert(char_iter == begin_ptr + chunk.size);
+         } else if( frame_cel.c.cell_type == 1 ) {
+           char_iter = read_object(char_iter, frame_cel.linked);
+           // Check that we've read all the data.
+           assert(char_iter == begin_ptr + chunk.size);
+         } else if ( frame_cel.c.cell_type == 2 ) {
+           char_iter = read_object(char_iter, frame_cel.w);
+           char_iter = read_object(char_iter, frame_cel.h);
+           frame_cel.pixels.resize(frame_cel.w * frame_cel.h);
            std::vector<BYTE> compressed;
-           compressed.resize(chunk.size - sizeof(c) - sizeof(WORD)*2);
+           compressed.resize(chunk.size - sizeof(frame_cel.c) - sizeof(WORD)*2);
            char_iter = read_object(char_iter, compressed);
            // Check that we've read all the data.
-           assert(char_iter == reinterpret_cast<const char*> (chunk.data.data())+chunk.size);
+           assert(char_iter == begin_ptr+chunk.size);
 
            std::vector<BYTE> decompressed = decompress(compressed);
-           auto char_iter = reinterpret_cast<const char*> (decompressed.data());
-           char_iter = read_object(char_iter, pixels);
+           auto pixel_iter = reinterpret_cast<const char*> (decompressed.data());
+           pixel_iter = read_object(pixel_iter, frame_cel.pixels);
          } else {
            //Something horrible has gone wrong here.
            assert("Something horrible has happened");
            return 1;
          }
-
+         cels.push_back(frame_cel);
+         break;
+       case frame_tags:
+         assert(s.tags.size() == 0);
+         char_iter = read_object(char_iter, s.tags);
+         // Why does chunk.size include its own size of its own header? Why does char_iter begin
+         // at a point including this header? I don't know :(. Math is hard, but lets
+         // assume this is right.
+         assert(char_iter == begin_ptr + chunk.size - sizeof(chunk.type) - sizeof(chunk.size));
          break;
        case pallet:
        case layer:
-       case frame_tags:
        case old_pallet:
        case old_pallet2:
        case mask:
@@ -175,21 +202,13 @@ int main(int argc, char* const argv[]) {
          std::cerr << "Unsupported type" << std::endl;
 
        }
-
-      if ( chunk.type == cel ) {
-        std::cout << std::endl;
-        for ( size_t x = 0; x < h; ++x ) {
-          for ( size_t y = 0; y < w; ++y ) {
-            if ( pixels.at(y + (x*w)).r != 0 ) {
-              std::cout << "o";
-            } else {
-              std::cout << ".";
-            }
-          }
-          std::cout << std::endl;
-        }
-      }
     }
+    
+    // Now that we've parsed all of the chunks we should be 
+    // able to render the final cell.
+    auto& cel = cels.at(0);
+    print_as_ascii(cel.pixels, cel.w, cel.h);
+
   }
 
    return 0;

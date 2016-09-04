@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cassert>
 #include <vector>
 #pragma pack(push)
 #pragma pack(1)
@@ -96,7 +97,32 @@ struct cel_header {
   BYTE z0[7];
 };
 
-#pragma pack(pop)
+struct frame_cel {
+  cel_header c;
+  WORD w, h;
+  WORD linked = 0;
+  // Assume RGBA
+  std::vector<PIXEL_RGBA> pixels;
+};
+
+struct Tag {
+  WORD from;
+  WORD to;
+  BYTE loop_direction;
+  std::string name;
+};
+
+struct Frame {
+  WORD duration;
+  std::vector<PIXEL_RGBA> pixels;
+};
+
+struct Sprite {
+  WORD w,h;
+  std::vector<Tag> tags;
+  std::vector<Frame> frames;
+};
+
 
 template<typename T>
 const char* read_object(const char* buf, T& target) {
@@ -110,6 +136,46 @@ const char* read_object(const char* buf, std::vector<CT>& target) {
   CT const* buf_start = reinterpret_cast<const CT*>(buf);
   std::copy(buf_start, buf_start + size, target.begin());
   return buf + size * sizeof(CT);
+}
+
+template<>
+const char* read_object(const char* buf, std::string& target) {
+  WORD s_len;
+  buf = read_object(buf, s_len);
+  target.resize(s_len);
+  size_t size = target.size();
+  const char* buf_start = reinterpret_cast<const char*>(buf);
+  std::copy(buf_start, buf_start + size, target.begin());
+  return buf + size;
+}
+
+template<>
+const char* read_object(const char* buf, std::vector<Tag>& target) {
+  struct tag_header {
+    WORD tag_count;
+    BYTE z0[8];
+  } header;
+  buf = read_object(buf, header);
+
+  struct t_read_struct {
+    WORD from;
+    WORD to;
+    BYTE loop_dir;
+    BYTE z0[8];
+    BYTE RGB[3];
+    BYTE z1;
+  } t;
+  
+  for ( size_t i = 0; i < header.tag_count; ++i ) {
+    buf = read_object(buf, t);
+    std::string s;
+    buf = read_object(buf, s);
+    target.emplace_back(Tag{t.from, t.to, t.loop_dir, s });
+    // Zero our inplace struct so we don't be so confused on next read.
+    t = t_read_struct{};
+  }
+
+  return buf;
 }
 
 template <typename T>
@@ -126,3 +192,5 @@ T swap_endian(T u) {
 
   return dest.u;
 }
+
+#pragma pack(pop)
