@@ -36,6 +36,7 @@ set(SOURCES
 
 set(INCLUDES
     loader.h
+    loader-detail.hpp
     doc-lite.h
     )
 

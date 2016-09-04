@@ -1,5 +1,5 @@
 // Aseprite Convert to RGBA library
-// Copyright (c) 2016 Bablawn3d5
+// Copyright (c) 2016 Bablawn3d5 - <stephen.ma@bablawn.com>
 //
 // This file is released under the terms of the MIT license.
 // Read LICENSE.txt for more information.
