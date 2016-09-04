@@ -6,7 +6,6 @@
 #pragma once
 
 #include <cstdint>
-#include <sstream>
 #include <vector>
 
 #pragma pack(push)
