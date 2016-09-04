@@ -5,8 +5,6 @@
 // Read LICENSE.txt for more information.
 #include "loader.h"
 #include <iostream>
-#include <sstream>
-#include <fstream>
 #include <vector>
 #include <cassert>
 
@@ -44,36 +42,17 @@ void print_struct(void *s, size_t structSize) {
 }
 
 int main(int argc, char* const argv[]) {
-  std::ifstream file;
-  file.open("Sprite-0002.ase", std::ios::in | std::ios::binary);
+  aseprite::Sprite s1 = aseprite::load_sprite_from_file("Sprite-0001.ase");
+  aseprite::Sprite s2 = aseprite::load_sprite_from_file("Sprite-0002.ase");
+  aseprite::Sprite s3 = aseprite::load_sprite_from_file("Sprite-0003.ase");
 
-  std::streampos fileSize;
-  if ( !file ) {
-    std::cerr << "Not able to read" << std::endl;
-    return 1;
-  } else {
-    file.seekg(0, std::ios_base::end);
-    fileSize = file.tellg();
-    if ( fileSize <= 128 ) {
-      std::cerr << "File is malformed .ase format." << std::endl;
-      return 1;
-    }
+  for ( auto& f : s2.frames ) {
+     print_as_ascii(f.pixels, s2.w, s2.h);
+  }
+  for ( auto& f : s3.frames ) {
+    print_as_ascii(f.pixels, s3.w, s3.h);
   }
 
-  std::vector<char> vec;
-  // HACK(SMA): Just load the entire file into memory rather than streaming it.
-  // We're assuming .ase files won't become absurdly large.
-  if ( !file.eof() && !file.fail() ) {
-    vec.resize((size_t)fileSize);
-    file.seekg(0, std::ios_base::beg);
-    file.read(&vec[0], fileSize);
-  }
-
-  auto char_iter = reinterpret_cast<const char*> (vec.data());
-  aseprite::Sprite s = aseprite::load_sprite(char_iter);
-
-  for ( auto& f : s.frames ) {
-     print_as_ascii(f.pixels, s.w, s.h);
-  }
+  aseprite::Sprite s4 = aseprite::load_sprite_from_file("Sprite-0004.ase");
   return 0;
 }

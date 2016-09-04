@@ -5,10 +5,13 @@
 // Read LICENSE.txt for more information.
 #include "loader.h"
 #include <string>
+#include <iostream>
+#include <fstream>
 
 namespace aseprite {
 using namespace aseprite::details;
 
+// zlib decompress ase byte buffer
 std::vector<BYTE> decompress(const std::vector<BYTE>& str) {
   z_stream zs;
   zs.zalloc = (alloc_func)0;
@@ -181,6 +184,38 @@ Sprite load_sprite(const char* char_iter) {
   }
 
   return s;
+}
+
+Sprite load_sprite_from_file(const char * filename) {
+  std::ifstream file;
+  file.open(filename, std::ios::in | std::ios::binary);
+
+  std::streampos fileSize;
+  if ( !file ) {
+    std::cerr << "Not able to read" << std::endl;
+    throw(std::runtime_error("Not able to read file"));
+    return Sprite();
+  } else {
+    file.seekg(0, std::ios_base::end);
+    fileSize = file.tellg();
+    if ( fileSize <= 128 ) {
+      std::cerr << "File is malformed .ase format." << std::endl;
+      throw(std::runtime_error("File is malformed .ase format.."));
+      return Sprite();
+    }
+  }
+
+  // HACK(SMA): Just load the entire file into memory rather than streaming it.
+  // We're assuming .ase files won't become absurdly large.
+  std::vector<char> vec;
+  if ( !file.eof() && !file.fail() ) {
+    vec.resize((size_t)fileSize);
+    file.seekg(0, std::ios_base::beg);
+    file.read(&vec[0], fileSize);
+  }
+
+  auto char_iter = reinterpret_cast<const char*> (vec.data());
+  return load_sprite(char_iter);
 }
 
 namespace details {

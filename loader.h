@@ -19,6 +19,9 @@ std::vector<BYTE> decompress(const std::vector<BYTE>& str);
 // Loads sprite from byte array
 Sprite load_sprite(const char* char_iter);
 
+// Loads sprite from file.
+Sprite load_sprite_from_file(const char* filename);
+
 
 namespace details {
 struct ase_header {
