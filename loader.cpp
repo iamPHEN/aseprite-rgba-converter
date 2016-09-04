@@ -160,28 +160,38 @@ Sprite load_sprite(const char* char_iter) {
       }
     }
 
-    // FIXME(SMA) : No support for layering yet.
-    assert(cels.size() == 1);
-    // Now that we've parsed all of the chunks we should be 
-    // able to render the final cell.
-    auto& cel = cels.at(0);
-    // FIXME(SMA) : No support for linked layers, nor do I know how to produce one.
-    assert(cel.linked == 0);
+    if ( cels.size() > 0 ) {
+      // FIXME(SMA) : No support for layering yet.
+      assert(cels.size() == 1);
+      assert(frame.header.duration >= 1);
+      // Now that we've parsed all of the chunks we should be 
+      // able to render the final cell.
+      auto& cel = cels.at(0);
+      // FIXME(SMA) : No support for linked layers, nor do I know how to produce one.
+      assert(cel.linked == 0);
 
-    // Create temparay frame_cel for final render
-    frame_cel c;
-    c.c.x = 0;
-    c.c.y = 0;
-    c.w = s.w;
-    c.h = s.h;
-    c.pixels.resize(c.w * c.h);
+      // Create temparay frame_cel for final render
+      frame_cel c;
+      c.c.x = 0;
+      c.c.y = 0;
+      c.w = s.w;
+      c.h = s.h;
+      c.pixels.resize(c.w * c.h);
 
-    // Render Final frame by blending all frames together.
-    Frame f;
-    f.duration = frame.header.duration;
-    f.pixels.resize(s.h * s.w);
-    f.pixels = dest_blend_cels(c, cel);
-    s.frames.push_back(f);
+      // Render Final frame by blending all frames together.
+      Frame f;
+      f.duration = frame.header.duration;
+      f.pixels.resize(s.h * s.w);
+      f.pixels = dest_blend_cels(c, cel);
+      s.frames.push_back(f);
+    } else {
+      Frame f;
+      f.duration = frame.header.duration;
+      // TODO(SMA) : Save space by allowing 0 pixels in frame using 
+      // f.link when its implemneted.
+      f.pixels.resize(s.h * s.w);
+      s.frames.push_back(f);
+    }
   }
 
   return s;

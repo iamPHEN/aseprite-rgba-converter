@@ -18,7 +18,8 @@ void print_as_ascii(const std::vector<PIXEL_RGBA>& pixels, WORD w, WORD h) {
     for ( size_t y = 0; y < w; ++y ) {
       if ( pixels.at(y + (x*w)).r != 0 || 
           pixels.at(y + (x*w)).g != 0 || 
-          pixels.at(y + (x*w)).b != 0 ) {
+          pixels.at(y + (x*w)).b != 0 || 
+          pixels.at(y + (x*w)).a != 0 ) {
         std::cout << "o";
       } else {
         std::cout << ".";
@@ -46,13 +47,20 @@ int main(int argc, char* const argv[]) {
   aseprite::Sprite s2 = aseprite::load_sprite_from_file("Sprite-0002.ase");
   aseprite::Sprite s3 = aseprite::load_sprite_from_file("Sprite-0003.ase");
 
-  for ( auto& f : s2.frames ) {
-     print_as_ascii(f.pixels, s2.w, s2.h);
-  }
-  for ( auto& f : s3.frames ) {
-    print_as_ascii(f.pixels, s3.w, s3.h);
+  assert(s1.frames.size() == 4);
+  assert(s1.w == 32);
+  assert(s1.h == 32);
+  assert(s2.frames.size() == 5);
+  assert(s2.tags.size() == 2);
+  assert(s3.w == 320);
+  assert(s3.h == 320);
+
+  for ( auto& f : s1.frames ) {
+     print_as_ascii(f.pixels, s1.w, s1.h);
   }
 
   aseprite::Sprite s4 = aseprite::load_sprite_from_file("Sprite-0004.ase");
+  assert(s4.w == 3200);
+  assert(s4.h == 3200);
   return 0;
 }
