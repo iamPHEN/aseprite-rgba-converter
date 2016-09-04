@@ -28,7 +28,7 @@ endif()
 
 
 set(BUILD_SHARED_LIBS off)
-option(ZLIB_TEST    "Compile with zlib examples/tests" Off)
+option(ZLIB_TESTS    "Compile with zlib examples/tests" Off)
 
 set(SOURCES
     loader.cpp
