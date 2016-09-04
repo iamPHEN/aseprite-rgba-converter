@@ -1,4 +1,8 @@
-
+// Aseprite Convert to RGBA library
+// Copyright (c) 2016 Bablawn3d5
+//
+// This file is released under the terms of the MIT license.
+// Read LICENSE.txt for more information.
 #include "loader.h"
 #include <iostream>
 #include <sstream>

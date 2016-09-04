@@ -32,6 +32,7 @@ set(SOURCES
 
 set(INCLUDES
     loader.h
+    doc-lite.h
     )
 
 set(SKIP_INSTALL_ALL 1)
