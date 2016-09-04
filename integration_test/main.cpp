@@ -66,7 +66,7 @@ int main(int argc, char* const argv[]) {
   }
 
   auto char_iter = reinterpret_cast<const char*> (vec.data());
-  auto s = aseprite::load_sprite(char_iter);
+  aseprite::Sprite s = aseprite::load_sprite(char_iter);
 
   for ( auto& f : s.frames ) {
      print_as_ascii(f.pixels, s.w, s.h);
