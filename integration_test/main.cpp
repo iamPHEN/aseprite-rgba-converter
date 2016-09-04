@@ -3,7 +3,7 @@
 //
 // This file is released under the terms of the MIT license.
 // Read LICENSE.txt for more information.
-#include "loader.h"
+#include "AsepriteRgbaConvert/loader.h"
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -16,9 +16,9 @@ void print_as_ascii(const std::vector<PIXEL_RGBA>& pixels, WORD w, WORD h) {
   std::cout << std::endl;
   for ( size_t x = 0; x < h; ++x ) {
     for ( size_t y = 0; y < w; ++y ) {
-      if ( pixels.at(y + (x*w)).r != 0 || 
-          pixels.at(y + (x*w)).g != 0 || 
-          pixels.at(y + (x*w)).b != 0 || 
+      if ( pixels.at(y + (x*w)).r != 0 ||
+          pixels.at(y + (x*w)).g != 0 ||
+          pixels.at(y + (x*w)).b != 0 ||
           pixels.at(y + (x*w)).a != 0 ) {
         std::cout << "o";
       } else {

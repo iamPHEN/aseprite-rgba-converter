@@ -32,23 +32,24 @@ option(ZLIB_TESTS    "Compile with zlib examples/tests" Off)
 option(AsepriteRgbaConvert_TESTS    "Compile AsepriteRgbaConvert tests" Off)
 
 set(SOURCES
-    loader.cpp
+    AsepriteRgbaConvert/loader.cpp
     )
 
 set(INCLUDES
-    loader.h
-    loader-detail.hpp
-    doc-lite.h
+    AsepriteRgbaConvert/loader.h
+    AsepriteRgbaConvert/loader-detail.hpp
+    AsepriteRgbaConvert/doc-lite.h
     )
 
 set(SKIP_INSTALL_ALL 1)
 set(ZLIB_ROOT ${PROJECT_SOURCE_DIR}/zlib)
-set(ZLIB_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/zlib" "${CMAKE_BINARY_DIR}/zlib")
+set(ZLIB_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/zlib" "${CMAKE_CURRENT_BINARY_DIR}/zlib")
 set(ZLIB_LIBRARIES "zlibstatic")
 add_subdirectory(${PROJECT_SOURCE_DIR}/zlib)
 
 add_library(AsepriteRgbaConvert STATIC ${SOURCES} ${INCLUDES})
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/AsepriteRgbaConvert)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(AsepriteRgbaConvert ${ZLIB_LIBRARIES})
 
