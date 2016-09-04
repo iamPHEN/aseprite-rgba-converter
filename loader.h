@@ -8,6 +8,7 @@
 #pragma pack(push)
 #pragma pack(1)
 
+namespace aseprite {
 using BYTE = uint8_t;
 using WORD = uint16_t;
 using DWORD = uint32_t;
@@ -40,6 +41,7 @@ struct RECT {
   LONG h;
 };
 
+namespace details {
 struct ase_header {
   DWORD fsize;
   WORD magic;
@@ -106,6 +108,9 @@ struct frame_cel {
   // Assume RGBA
   std::vector<PIXEL_RGBA> pixels;
 };
+}
+
+using namespace aseprite::details;
 
 struct Tag {
   WORD from;
@@ -251,8 +256,8 @@ std::vector<PIXEL_RGBA> dest_blend_cels(const frame_cel& src, const frame_cel& d
   pixels.resize(src.w * src.h);
   for ( size_t x = 0; x < src.h; ++x ) {
     for ( size_t y = 0; y < src.w; ++y ) {
-      if ( x >= dst.c.x  && x < (dst.c.x + dst.h) &&
-          y >= dst.c.y  && y < (dst.c.y + dst.w) ) {
+      if ( x >= dst.c.x  && x < (size_t)(dst.c.x + dst.h) &&
+          y >= dst.c.y  && y < (size_t)(dst.c.y + dst.w) ) {
         auto& pixel = dst.pixels.at((y - dst.c.y) + ((x - dst.c.x)*dst.w));
         pixels[y + (x*src.w)] = pixel;
       } else {
@@ -388,4 +393,5 @@ Sprite load_sprite(const char* char_iter) {
   return s;
 }
 
+}
 #pragma pack(pop)

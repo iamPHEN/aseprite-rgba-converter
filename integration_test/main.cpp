@@ -6,6 +6,9 @@
 #include <vector>
 #include <cassert>
 
+using aseprite::PIXEL_RGBA;
+using aseprite::WORD;
+
 // Dumps RGBA array to stdout as ascii
 void print_as_ascii(const std::vector<PIXEL_RGBA>& pixels, WORD w, WORD h) {
   std::cout << std::endl;
@@ -63,7 +66,7 @@ int main(int argc, char* const argv[]) {
   }
 
   auto char_iter = reinterpret_cast<const char*> (vec.data());
-  auto s = load_sprite(char_iter);
+  auto s = aseprite::load_sprite(char_iter);
 
   for ( auto& f : s.frames ) {
      print_as_ascii(f.pixels, s.w, s.h);
