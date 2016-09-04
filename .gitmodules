@@ -1,0 +1,4 @@
+[submodule "zlib"]
+	path = zlib
+	url = https://github.com/Bablawn3d5/zlib.git
+	ignore = dirty
