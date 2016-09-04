@@ -26,6 +26,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL 'MSVC')
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Ox /Zi /FS /DEBUG")
 endif()
 
+
+set(BUILD_SHARED_LIBS off)
+option(ZLIB_TEST    "Compile with zlib examples/tests" Off)
+
 set(SOURCES
     loader.cpp
     )

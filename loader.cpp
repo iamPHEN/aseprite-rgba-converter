@@ -6,6 +6,7 @@
 #include "loader.h"
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 namespace aseprite {
