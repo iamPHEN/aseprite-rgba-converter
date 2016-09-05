@@ -236,14 +236,15 @@ namespace details {
 std::vector<PIXEL_RGBA> dest_blend_cels(const frame_cel& src, const frame_cel& dst) {
   std::vector<PIXEL_RGBA> pixels;
   pixels.resize(src.w * src.h);
-  for ( size_t x = 0; x < src.h; ++x ) {
-    for ( size_t y = 0; y < src.w; ++y ) {
-      if ( x >= dst.c.x  && x < (size_t)(dst.c.x + dst.h) &&
-          y >= dst.c.y  && y < (size_t)(dst.c.y + dst.w) ) {
-        auto& pixel = dst.pixels.at((y - dst.c.y) + ((x - dst.c.x)*dst.w));
-        pixels[y + (x*src.w)] = pixel;
+  for ( size_t y = 0; y < src.h; ++y ) {
+    for ( size_t x = 0; x < src.w; ++x ) {
+      // If we're within the offsets of dst frame, paint dst instead
+      if ( x - dst.c.x < dst.w && y - dst.c.y < dst.h &&
+           x - dst.c.x >= 0 && y - dst.c.y >= 0  ) {
+        auto& pixel = dst.pixels[(x - dst.c.x) + ((y - dst.c.y)*dst.w)];
+        pixels[x + (y*src.w)] = pixel;
       } else {
-        pixels[y + (x*src.w)] = src.pixels[y + (x*src.w)];
+        pixels[x + (y*src.w)] = src.pixels[x + (y*src.w)];
       }
     }
   }

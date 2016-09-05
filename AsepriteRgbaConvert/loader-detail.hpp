@@ -70,8 +70,8 @@ struct frame {
 
 struct cel_header {
   WORD layer_index;
-  WORD x;
-  WORD y;
+  SIGNED_WORD x;
+  SIGNED_WORD y;
   BYTE opacity;
   WORD cell_type;
   BYTE z0[7];

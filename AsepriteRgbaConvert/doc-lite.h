@@ -13,6 +13,7 @@
 namespace aseprite {
 using BYTE = uint8_t;
 using WORD = uint16_t;
+using SIGNED_WORD = int16_t;
 using DWORD = uint32_t;
 using LONG = int32_t;
 using STRING_LEN = WORD;
