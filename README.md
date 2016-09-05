@@ -1,9 +1,13 @@
 # aseprite-rgba-converter
 Tiny project to convert a .ase to a RGBA Byte array
 
+Please checkout http://www.aseprite.org/, or https://github.com/aseprite/aseprite for more infromation about Aseprite!
+
 ---
 
 This project is intended as a intermediary library for converting ".ase" files directly into SFML::Sprite.
+
+Project implements parser for the [ase file format](https://github.com/aseprite/aseprite/blob/master/docs/files/ase.txt) and converts it to doc-lite.h objects which is based on the aseprite doc module.
 
 Currently a bit of a work in progress, but it's functional 'enough' to use.
 
