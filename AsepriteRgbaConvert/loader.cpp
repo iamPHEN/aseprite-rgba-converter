@@ -238,8 +238,10 @@ std::vector<PIXEL_RGBA> dest_blend_cels(const frame_cel& src, const frame_cel& d
   pixels.resize(src.w * src.h);
   for ( size_t y = 0; y < src.h; ++y ) {
     for ( size_t x = 0; x < src.w; ++x ) {
-      if ( x >= dst.c.x  && x < (size_t)(dst.c.x + dst.w) &&
-          y >= dst.c.y  && y < (size_t)(dst.c.y + dst.h) ) {
+      // HACK(SMA) : There's likely a bug here when we reach near the ends of 
+      // SIGNED WORD here.
+      if (  x >= dst.c.x  && x < (size_t)(dst.c.x + dst.w) &&
+         y >= dst.c.y  && y < (size_t)(dst.c.y + dst.h) ) {
         auto& pixel = dst.pixels.at((x - dst.c.x) + ((y - dst.c.y)*dst.w));
         pixels[x + (y*src.w)] = pixel;
       } else {

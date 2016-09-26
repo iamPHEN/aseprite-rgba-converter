@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <climits>
 
 #pragma pack(push)
 #pragma pack(1)
