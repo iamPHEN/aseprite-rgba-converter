@@ -46,15 +46,15 @@ struct frame_header {
 static_assert(sizeof(frame_header) == 16, "Sizeof frame_header doesn't match header size of 16 bytes.");
 
 enum chunk_type {
-  old_pallet  = 0x0004ui16,
-  old_pallet2 = 0x0011ui16,
-  layer = 0x2004ui16,
-  cel = 0x2005ui16,
-  mask = 0x2016ui16,
-  path = 0x2017ui16,
-  frame_tags = 0x2018ui16,
-  pallet  = 0x2019ui16,
-  user_data = 0x2020ui16,
+  old_pallet  = 0x0004,
+  old_pallet2 = 0x0011,
+  layer = 0x2004,
+  cel = 0x2005,
+  mask = 0x2016,
+  path = 0x2017,
+  frame_tags = 0x2018,
+  pallet  = 0x2019,
+  user_data = 0x2020,
 };
 
 struct frame_chunk {
