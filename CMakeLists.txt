@@ -26,15 +26,18 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL 'MSVC')
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Ox /Zi /FS /DEBUG")
 endif()
 
-set(BUILD_SHARED_LIBS off)
+option(BUILD_SHARED_LIBS "Compile non-static libs?" Off)
 option(ZLIB_TESTS    "Compile with zlib examples/tests" Off)
 option(AsepriteRgbaConvert_TESTS    "Compile AsepriteRgbaConvert tests" Off)
 
 set(SOURCES
     AsepriteRgbaConvert/loader.cpp
+    AsepriteRgbaConvert/blend.cpp
+    AsepriteRgbaConvert/loader-detail.cpp
     )
 
 set(INCLUDES
+    AsepriteRgbaConvert/blend.h
     AsepriteRgbaConvert/loader.h
     AsepriteRgbaConvert/loader-detail.hpp
     AsepriteRgbaConvert/doc-lite.h

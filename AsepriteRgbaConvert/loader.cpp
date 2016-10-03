@@ -5,14 +5,18 @@
 // Read LICENSE.txt for more information.
 #include "loader.h"
 #include "loader-detail.hpp"
+#include "blend.h"
 #include "zlib.h"
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <functional>
+#include <algorithm>
 
 namespace aseprite {
 using namespace aseprite::details;
+using aseprite::blend::combine_blend_cels;
 
 // zlib decompress ase byte buffer
 std::vector<BYTE> decompress(const std::vector<BYTE>& str) {
@@ -100,14 +104,16 @@ Sprite load_sprite(const char* char_iter) {
   Sprite s;
   s.w = a.width;
   s.h = a.height;
+  std::vector<Layer> layers;
   for ( auto& frame : frames ) {
     std::vector<frame_cel> cels;
     for ( auto& chunk : frame.chunks ) {
       auto char_iter = reinterpret_cast<const char*> (chunk.data.data());
       auto begin_ptr = char_iter;
       frame_cel frame_cel;
-      switch ( chunk.type ) {
-      case cel:
+      Layer layer;
+      switch ( static_cast<chunk_type>(chunk.type) ) {
+      case chunk_type::cel:
         char_iter = read_object(char_iter, frame_cel.c);
         assert(a.depth == 32);
         if ( frame_cel.c.cell_type == 0 ) {
@@ -140,7 +146,7 @@ Sprite load_sprite(const char* char_iter) {
         }
         cels.push_back(frame_cel);
         break;
-      case frame_tags:
+      case chunk_type::frame_tags:
         assert(s.tags.size() == 0);
         char_iter = read_object(char_iter, s.tags);
         // Why does chunk.size include its own size of its own header? Why does char_iter begin
@@ -148,12 +154,16 @@ Sprite load_sprite(const char* char_iter) {
         // assume this is right.
         assert(char_iter == begin_ptr + chunk.size - sizeof(chunk.type) - sizeof(chunk.size));
         break;
-      case pallet:
-      case layer:
-      case old_pallet:
-      case old_pallet2:
-      case mask:
-      case path:
+      case chunk_type::layer:
+         char_iter = read_object(char_iter, layer.header);
+         char_iter = read_object(char_iter, layer.name);
+         layers.push_back(layer);
+         break;
+      case chunk_type::pallet:
+      case chunk_type::old_pallet:
+      case chunk_type::old_pallet2:
+      case chunk_type::mask:
+      case chunk_type::path:
         break;
       default:
         // Should throw a error here, we found a new header
@@ -163,14 +173,9 @@ Sprite load_sprite(const char* char_iter) {
     }
 
     if ( cels.size() > 0 ) {
-      // FIXME(SMA) : No support for layering yet.
-      assert(cels.size() == 1);
       assert(frame.header.duration >= 1);
       // Now that we've parsed all of the chunks we should be 
       // able to render the final cell.
-      auto& cel = cels.at(0);
-      // FIXME(SMA) : No support for linked layers, nor do I know how to produce one.
-      assert(cel.linked == 0);
 
       // Create temparay frame_cel for final render
       frame_cel c;
@@ -180,11 +185,52 @@ Sprite load_sprite(const char* char_iter) {
       c.h = s.h;
       c.pixels.resize(c.w * c.h);
 
-      // Render Final frame by blending all frames together.
       Frame f;
       f.duration = frame.header.duration;
       f.pixels.resize(s.h * s.w);
-      f.pixels = dest_blend_cels(c, cel);
+
+      // HACK(SMA) : assuming that these are still in reverse order.
+      for ( auto& it = cels.rbegin(); it != cels.rend(); ++it ) {
+        const auto& cel = *it;
+        // FIXME(SMA) : No support for linked layers yet.
+        assert(cel.linked == 0);
+        // If index is non-zero.
+        if ( layers.size() > 0 ) {
+          assert(cel.c.layer_index < layers.size());
+          const auto& blend = layers[cel.c.layer_index];
+          const auto& blend_func = [&blend]() -> aseprite::blend::rgba_blend_func {
+            switch( blend.header.blend_mode ) {
+              case 0: return aseprite::blend::normal_blend;
+              case 1: return aseprite::blend::multiply_blend;
+              case 2: return aseprite::blend::screen_blend;
+              case 3: return aseprite::blend::overlay_blend;
+              case 4: return aseprite::blend::darken_blend;
+              case 5: return aseprite::blend::lighten_blend;
+              case 6: return aseprite::blend::color_dodge_blend;
+              case 7: return aseprite::blend::color_burn_blend;
+              case 8: return aseprite::blend::hard_light_blend;
+              case 9: return aseprite::blend::soft_light_blend;
+              case 10: return aseprite::blend::diffrence_blend;
+              case 11: return aseprite::blend::exclusion_blend;
+              // FIXME(SMA) : HSL blends don't actually work.
+              //case 12: return aseprite::blend::hue_blend;
+              //case 13: return aseprite::blend::saturation_blend;
+              //case 14: return aseprite::blend::color_blend;
+              //case 15: return aseprite::blend::luminosity_blend;
+            }
+            assert(false && "Unkown blending func passed in");
+            return aseprite::blend::normal_blend;
+          }();
+
+          c.pixels = combine_blend_cels(c, cel, blend.header.opacity, blend_func);
+        } else {
+          // Render, Final frame by blending all frames together.
+          c.pixels = combine_blend_cels(c, cel, 0xFF, aseprite::blend::dest);
+        }
+      }
+
+      // FIXME(SMA) : Do a copy to pixels
+      f.pixels = c.pixels;
       s.frames.push_back(f);
     } else {
       Frame f;
@@ -230,27 +276,5 @@ Sprite load_sprite_from_file(const char * filename) {
   auto char_iter = reinterpret_cast<const char*> (vec.data());
   return load_sprite(char_iter);
 }
-
-namespace details {
-// TODO(SMA) : Move me to a blend header.
-std::vector<PIXEL_RGBA> dest_blend_cels(const frame_cel& src, const frame_cel& dst) {
-  std::vector<PIXEL_RGBA> pixels;
-  pixels.resize(src.w * src.h);
-  for ( size_t y = 0; y < src.h; ++y ) {
-    for ( size_t x = 0; x < src.w; ++x ) {
-      // HACK(SMA) : There's likely a bug here when we reach near the ends of 
-      // SIGNED WORD here.
-      if (  x >= dst.c.x  && x < (size_t)(dst.c.x + dst.w) &&
-         y >= dst.c.y  && y < (size_t)(dst.c.y + dst.h) ) {
-        auto& pixel = dst.pixels.at((x - dst.c.x) + ((y - dst.c.y)*dst.w));
-        pixels[x + (y*src.w)] = pixel;
-      } else {
-        pixels[x + (y*src.w)] = src.pixels[x + (y*src.w)];
-      }
-    }
-  }
-  return pixels;
-}
-} // namespace aseprite::details
 
 } // namespace aseprite
